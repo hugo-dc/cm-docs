@@ -1,0 +1,336 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>FastSSZ - Code Merkleization</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="geth.html"><strong aria-hidden="true">2.</strong> Geth changes</a></li><li class="chapter-item expanded "><a href="schema.html"><strong aria-hidden="true">3.</strong> Schema</a></li><li class="chapter-item expanded "><a href="codetrie.html"><strong aria-hidden="true">4.</strong> CodeTrie</a></li><li class="chapter-item expanded "><a href="fastssz.html" class="active"><strong aria-hidden="true">5.</strong> FastSSZ</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Code Merkleization</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#fastssz" id="fastssz">FastSSZ</a></h1>
+<p><a href="https://github.com/ferranbt/fastssz">https://github.com/ferranbt/fastssz</a></p>
+<h2><a class="header" href="#fastssz-changes" id="fastssz-changes">FastSSZ Changes</a></h2>
+<p><a href="https://github.com/ferranbt/fastssz/pull/26">#26</a> - Added the possibility 
+to use a different hash function. Sina wanted to use <code>keccak256</code> as hash
+function.</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/28">#27</a> - Added <code>PutUint32</code>,
+<code>PutUint16</code>, and <code>PutUint8</code> to the hasher. Used to only have <code>PutUint64</code>.</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/28">#28</a> 
+- Created new schema, 
+- Added verification function for one of the structs,
+- Some hand-crafted test cases,
+- Pending to make <code>verify</code> more general so its not only for one struct.
+- New Files:
+- <code>tests/codetrie.go</code>: 
+- <code>tests/codetrie_encoding.go</code>: Automatically generated by fastssz
+- <code>tests/codetrie_test.go</code>: Verify proof tests</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/32">#32</a>
+- Added new <code>proof.go</code>; which included functions to verify proofs and verify
+multiproof as other helper functions.</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/33">#33</a>
+- Added support for multiproof generation</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/38">#38</a>
+- Adds a <code>--experimental</code> flag to get the tree-backing of an object
+- Given the tree-backing you can compute the root, generate and verify
+proofs.</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/39">#39</a> (pending PR)
+- Remove duplicate leafs from proof</p>
+<h2><a class="header" href="#provemulti" id="provemulti">ProveMulti</a></h2>
+<p>path: <code>tree.go</code></p>
+<ul>
+<li>Input: indices</li>
+<li>Output: <a href="#multiproof">Multiproof</a></li>
+</ul>
+<p>Get the required indices (<a href="#getrequiredindices"><code>getRequiredIndices</code></a>).</p>
+<p>Defines <code>proof</code> as a <code>Multiproof</code> object, declared with the provided indices,
+an empty Leaves array or arrays, an empty Hashes array of arrays.</p>
+<p>For each provided index, get the node based on the index. Adds the node as a <strong>Leave</strong>.</p>
+<p>For each <code>reqIndices</code>, get the node based on that index, Adds the node as
+a <strong>Hash</strong>.</p>
+<p>Returns the proof.</p>
+<pre><code class="language-golang">func (n *Node) ProveMulti(indices []int) (*Multiproof, error) {
+	reqIndices := getRequiredIndices(indices)
+	proof := &amp;Multiproof{Indices: indices, Leaves: make([][]byte, len(indices)), Hashes: make([][]byte, len(reqIndices))}
+
+	for i, gi := range indices {
+		node, err := n.Get(gi)
+		if err != nil {
+			return nil, err
+		}
+		proof.Leaves[i] = node.value
+	}
+
+	for i, gi := range reqIndices {
+		cur, err := n.Get(gi)
+		if err != nil {
+			return nil, err
+		}
+		proof.Hashes[i] = hashNode(cur)
+	}
+
+	return proof, nil
+}
+</code></pre>
+<h2><a class="header" href="#compress-multiproof" id="compress-multiproof">Compress (Multiproof)</a></h2>
+<ul>
+<li>(Multiproof) Compress: Returns a <code>*CompressedMultiproof</code></li>
+</ul>
+<p><code>tree.go</code></p>
+<pre><code class="language-golang">// Compress returns a new proof with zero hashes omitted.
+// See `CompressedMultiproof` for more info.
+func (p *Multiproof) Compress() *CompressedMultiproof {
+	compressed := &amp;CompressedMultiproof{
+		Indices:    p.Indices,
+		Leaves:     p.Leaves,
+		Hashes:     make([][]byte, 0, len(p.Hashes)),
+		ZeroLevels: make([]int, 0, len(p.Hashes)),
+	}
+
+	for _, h := range p.Hashes {
+		if l, ok := zeroHashLevels[string(h)]; ok {
+			compressed.ZeroLevels = append(compressed.ZeroLevels, l)
+			compressed.Hashes = append(compressed.Hashes, nil)
+		} else {
+			compressed.Hashes = append(compressed.Hashes, h)
+		}
+	}
+
+	return compressed
+}
+</code></pre>
+<h4><a class="header" href="#multiproof" id="multiproof">Multiproof:</a></h4>
+<pre><code class="language-golang">// Multiproof represents a merkle proof of several leaves.
+type Multiproof struct {
+	Indices []int
+	Leaves  [][]byte
+	Hashes  [][]byte
+}
+</code></pre>
+<h2><a class="header" href="#compressedmultiproof" id="compressedmultiproof">CompressedMultiproof:</a></h2>
+<pre><code class="language-golang">// CompressedMultiproof represents a compressed merkle proof of several leaves.
+// Compression is achieved by omitting zero hashes (and their hashes). `ZeroLevels`
+// contains information which helps the verifier fill in those hashes.
+type CompressedMultiproof struct {
+	Indices    []int
+	Leaves     [][]byte
+	Hashes     [][]byte
+	ZeroLevels []int // Stores the level for every omitted zero hash in the proof
+}
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="codetrie.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="codetrie.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

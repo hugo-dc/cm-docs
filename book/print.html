@@ -1,0 +1,638 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Code Merkleization</title>
+        
+        <meta name="robots" content="noindex" />
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="geth.html"><strong aria-hidden="true">2.</strong> Geth changes</a></li><li class="chapter-item expanded "><a href="schema.html"><strong aria-hidden="true">3.</strong> Schema</a></li><li class="chapter-item expanded "><a href="codetrie.html"><strong aria-hidden="true">4.</strong> CodeTrie</a></li><li class="chapter-item expanded "><a href="fastssz.html"><strong aria-hidden="true">5.</strong> FastSSZ</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Code Merkleization</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
+<p>This document describes experiments in Geth using chunk based merkleization
+according to <a href="https://eips.ethereum.org/EIPS/eip-2926">EIP 2926</a>, analyzing the
+Merkleization of contracts touched in blocks execution during a full sync.</p>
+<p>We are using SSZ Merkleization which was implemented in the
+<a href="./fastssz.html">fastssz</a> library and included: </p>
+<ul>
+<li>New structures/scheme were defined in order to represent a binary tree.</li>
+<li>Proof Generation Proof verification</li>
+</ul>
+<h1><a class="header" href="#geth-changes" id="geth-changes">Geth changes</a></h1>
+<p>A Geth fork was created and added some features to merkleize contracts when
+performing a full sync.</p>
+<p>Changes are described below.</p>
+<h2><a class="header" href="#new-modules" id="new-modules">New modules</a></h2>
+<p>Two new modules are introduced to the Geth code base:</p>
+<ul>
+<li><code>ssz</code>: contains the <a href="./schema.html">schema</a> defined for the code tree.</li>
+<li><code>codetrie</code>: contains the <a href="./codetrie.html">logic</a> needed to manipulate the tree.</li>
+</ul>
+<h2><a class="header" href="#codemerkleization-flag" id="codemerkleization-flag">codemerkleization flag</a></h2>
+<p>changes: </p>
+<ul>
+<li><code>cmd/geth/chaincmd.go</code></li>
+<li><code>cmd/geth/usage.go</code></li>
+<li><code>cmd/geth/main.go</code></li>
+<li><code>cmd/utils/flags.go</code></li>
+<li><code>eth/gen_config.go</code></li>
+<li><code>eth/backend.go</code></li>
+<li><code>eth/config.go</code></li>
+</ul>
+<p>A new flag was added in order to indicate geth we want to <em>analyze</em> how the
+contracts in a block would be merkleized and get an idea of the sizes of the
+proofs required for the contracts in each block.</p>
+<h2><a class="header" href="#state_processor" id="state_processor">state_processor</a></h2>
+<p>path: <code>core/state_processor.go</code></p>
+<p>One of the main <a href="geth.html#changed-code">changes</a> in Geth is in the <code>state_processor</code>.
+In function <code>Process</code> a <a href="./codetrie.html#newcontractbag">new &quot;Contract Bag&quot;</a> is
+created. A <code>ContractBag</code> is a map where the key is the <strong>code hash</strong> and the
+value is the <strong>contract code</strong>, this avoids duplicating identical contracts
+with the same bytecode. </p>
+<p>Then, each transaction in the block is applied. When the <a href="geth.html#run-evm-interpreter">EVM
+Interpreter</a> is <em>executing</em> the opcodes, collects
+information about touched opcodes and which chunks the opcodes belong.</p>
+<p>After contracts bytecode and touched opcodes/chunks are collected, the stats are 
+calculated by calling the <a href="./codetrie.html#stats-contractbag-method"><code>bag.Stats()</code></a> method,
+this method merkleizes the contract, and generates the proof needed for that
+contract in that specific block. The proof consists in indices, hashes, zero
+levels and leaves. And the sum of those proofs for all the is considered the
+&quot;proof size&quot;.</p>
+<blockquote>
+<p>, also the indices, hashes, zero levels and leaves
+are encoded as RLP as another way to measure the proof size.
+... pending to include RLP</p>
+</blockquote>
+<p>The results are stored in a <code>csv</code> (<code>cm-result.csv</code>) file with the following
+fields:</p>
+<ul>
+<li>Block number.</li>
+<li>Proof size: The sum of all indices, zero levels, hashes, and leaves.</li>
+<li>Code size: The sum of all contract's bytecode size in the block.</li>
+<li>Total indices</li>
+<li>Total zero levels</li>
+<li>Total hashes</li>
+<li>Total Leaves</li>
+</ul>
+<h2><a class="header" href="#run-evm-interpreter" id="run-evm-interpreter">Run (EVM Interpreter)</a></h2>
+<p>path: <code>core/vm/interpreter.go</code></p>
+<p>Checks if the <code>-codemerkleization</code> flag is set, and <code>ContractBag</code> was
+initialized correctly.</p>
+<p><a href="./codetrie.html#get-contractbag-method">Retrieve</a> the <code>Contract</code> from the
+contract bag, otherwise if the contract does not exist in the contract bag yet
+a new <code>Contract</code> object is created.</p>
+<p><a href="./codetrie.html#touchpc-contract-method">Marks the chunk</a> corresponding to the current opcode at the current Program Counter (pc) as &quot;touched&quot;.</p>
+<p>If the current opcode is <code>CODECOPY</code> it will also <a href="./codetrie.html#touchrange-contract-method">touch the
+range</a> of opcodes being copied.</p>
+<p>When the current opcode is <code>EXTCODECOPY</code>, it will also retrieve the
+code for the &quot;external&quot; contract code we want to copy 
+and that code will be <a href="./codetrie.html#touchrange-contract-method">marked as touched</a>.</p>
+<h2><a class="header" href="#added-code" id="added-code">Added code</a></h2>
+<p>This is the directory tree for the new code added to Geth</p>
+<pre><code>├── codetrie
+│   ├── ssz
+│   │   ├── types_encoding.go
+│   │   └── types.go
+│   ├── bin_hex_test.go
+│   ├── codetrie.go
+│   ├── codetrie_test.go
+│   ├── contract.go
+│   ├── op.go
+│   ├── ssz_test.go
+│   └── transition.go
+</code></pre>
+<h2><a class="header" href="#changed-code" id="changed-code">Changed code</a></h2>
+<pre><code>├── cmd
+│   ├── geth
+│   │   ├── chaincmd.go
+│   │   ├── main.go
+│   │   └── usage.go
+│   └── utils
+│       ├── flags.go
+├── core
+│   ├── ...
+│   ├── state_processor.go
+│   ├── ...
+├── eth
+│   ├── backend.go
+│   ├── config.go
+│   ├── gen_config.go
+</code></pre>
+<h2><a class="header" href="#code" id="code">Code</a></h2>
+<h1><a class="header" href="#schema" id="schema">Schema</a></h1>
+<p>The SSZ schema is defined as a series of <a href="schema.html#types">types</a> needed to represent
+the Code trie. After defining these <a href="schema.html#types">types</a> it is processed by
+<a href="schema.html#fastssz">FastSSZ</a> in order to generate all the data needed to create the
+tree, generate and verify proofs, this process generates Go source code in the
+<a href="schema.html#geth-code"><code>types_encoding.go</code></a> file.</p>
+<h2><a class="header" href="#types" id="types">Types</a></h2>
+<h3><a class="header" href="#codetrie" id="codetrie">CodeTrie</a></h3>
+<p><code>CodeTrie</code> is the type created to represent the code tree:</p>
+<pre><code class="language-go">type CodeTrie struct {
+	Metadata *Metadata
+	Chunks   []*Chunk `ssz-max:&quot;1024&quot;`
+}
+</code></pre>
+<p>The code trie consists in some <a href="schema.html#metadata"><code>Metadata</code></a> and the code
+<a href="schema.html#chunk"><code>Chunk</code></a>s.</p>
+<h3><a class="header" href="#metadata" id="metadata">Metadata</a></h3>
+<p>The metadata will store the <code>Version</code>, <code>CodeHash</code> and total <code>CodeLength</code>,
+according to the <a href="https://eips.ethereum.org/EIPS/eip-2926#metadata-fields">EIP</a></p>
+<pre><code class="language-golang">type Metadata struct {
+	Version    uint8
+	CodeHash   Hash `ssz-size:&quot;32&quot;`
+	CodeLength uint16
+}
+</code></pre>
+<h3><a class="header" href="#hash" id="hash">Hash</a></h3>
+<p>The Hash used in the Matadata's <code>CodeHash</code> is defined as a byte array.</p>
+<pre><code class="language-golang">type Hash []byte
+</code></pre>
+<h3><a class="header" href="#chunk" id="chunk">Chunk</a></h3>
+<p>Each Chunk contains a FIO, which corresponds to the First Instruction Offset
+(i.e. not part of a <code>PUSH*</code> opcode's input).</p>
+<p>The Chunk type also contains an array of byte code up to 32 bytes each.</p>
+<pre><code class="language-golang">type Chunk struct {
+	FIO  uint8
+	Code []byte `ssz-size:&quot;32&quot;` // Last chunk is right-padded with zeros
+}
+
+</code></pre>
+<h1><a class="header" href="#codetrie-1" id="codetrie-1">CodeTrie</a></h1>
+<p>A new go module <code>codetrie</code> was added, this module contains functions that
+allows to create contract objects, and the corresponding trees for each
+contract.</p>
+<h4><a class="header" href="#newcontractbag" id="newcontractbag">NewContractBag</a></h4>
+<p>path: <code>codetrie/contract.go</code>.</p>
+<p>Returns a new empty <a href="codetrie.html#contractbag-type"><code>ContractBag</code></a> object.</p>
+<pre><code class="language-go">func NewContractBag() *ContractBag {
+	return &amp;ContractBag{
+		contracts: make(map[common.Hash]*Contract),
+	}
+}
+</code></pre>
+<h4><a class="header" href="#contractbag-type" id="contractbag-type">ContractBag (Type)</a></h4>
+<p>path: <code>codetrie/contract.go</code>.</p>
+<p>A <code>ContractBag</code> contains a <code>contracts</code> map where the key is a <code>Hash</code> (the
+contract code hash) and the value is a <a href="codetrie.html#contract"><code>Contract</code></a> object pointer.</p>
+<pre><code class="language-go">type ContractBag struct {
+	contracts map[common.Hash]*Contract
+}
+</code></pre>
+<h4><a class="header" href="#contract-type" id="contract-type">Contract (Type)</a></h4>
+<p>path: <code>codetrie/contract.go</code>.</p>
+<p>A contract object contains a code, and a list of <a href="./schema.html#chunk">Chunk</a>s
+corresponding to the code, it can also store which chunks were touched during
+the execution of the contract. When a chunk is touched, the value of the
+element with key <code>index</code> will be set to <code>true</code>.</p>
+<pre><code class="language-go">type Contract struct {
+	code          []byte
+	chunks        []*Chunk
+	touchedChunks map[int]bool
+}
+</code></pre>
+<h4><a class="header" href="#chunk-type" id="chunk-type">Chunk (Type)</a></h4>
+<p>path: <code>codetrie/codetrie.go</code>.</p>
+<p>A chunk object containes two fields: </p>
+<ul>
+<li><code>fio</code>: is the first instrucction offset in the chunk.</li>
+<li><code>code</code>: the bytecode in the chunk, it can be up to 32 bytes. </li>
+</ul>
+<pre><code class="language-go">type Chunk struct {
+	fio  uint8 // firstInstructionOffset
+	code []byte
+}
+</code></pre>
+<h4><a class="header" href="#cmstats-type" id="cmstats-type">CMStats (type)</a></h4>
+<p>path: <code>codetrie/contract.go</code></p>
+<pre><code class="language-golang">type CMStats struct {
+	NumContracts  int
+	ProofSize     int
+	CodeSize      int
+	ProofStats    *ProofStats
+	TouchedChunks []int
+}
+</code></pre>
+<h4><a class="header" href="#stats-contractbag-method" id="stats-contractbag-method">Stats (ContractBag Method)</a></h4>
+<p>path: <code>codetrie/contract.go</code></p>
+<p>For each contract in the contract bag, get the code size and its
+&quot;<a href="codetrie.html#proofstats-contract-method">ProofStats</a>&quot; (RLPSize, Indices, ZeroLevels,
+Hashes, TouchedChunks). These results will be accumulated in the <a href="codetrie.html#cmstats-type">code
+merkleization block stats</a>.</p>
+<p><a href="./code.html#stats-contractbag-method">code</a></p>
+<h4><a class="header" href="#get-contractbag-method" id="get-contractbag-method">Get (ContractBag Method)</a></h4>
+<p>path: <code>codetrie/contract.go</code></p>
+<p>Checks if contract is already in the contracts bag. To do that checks if the
+hash for the input code already exists in the <code>contracts</code> map. If it exists it
+will return the pointer to the <code>Contract</code> corresponding to that code hash.</p>
+<p>If the contract was not previously added to the contract bag it will create
+a <a href="codetrie.html#newcontract">new contract</a> corresponding to the provided bytecode.</p>
+<h4><a class="header" href="#codesize-contract-method" id="codesize-contract-method">CodeSize (Contract Method)</a></h4>
+<p>path: <code>codetrie/contract.go</code></p>
+<p>Loops through all contracts in the bag. Sums the length of each contract code
+size.</p>
+<p>Returns the result.</p>
+<h4><a class="header" href="#proofstats-contract-method" id="proofstats-contract-method">ProofStats (Contract Method)</a></h4>
+<p><a href="codetrie.html#prove-contract-method"><code>Prove</code></a> the contract. Get the length of Indices,
+ZeroLevels, Hashes, TouchedChunks and Leaves in the resulting proof.</p>
+<blockquote>
+<p>It also serializes the proof as RLP in order to know the serialized length.</p>
+</blockquote>
+<h4><a class="header" href="#prove-contract-method" id="prove-contract-method">Prove (Contract Method)</a></h4>
+<p>path: <code>codetrie/contract.go</code></p>
+<p><a href="codetrie.html#getssztree">Creates a new SSZ tree</a> using the contracts code and specifying
+the chunk size of 32.</p>
+<p>Create new array of <strong>metadata</strong> indices (<code>mdIndices</code>), it is initialized with the indexes 7,
+8, 9,  and 10.</p>
+<p><code>mdIndices := []int{7, 8, 9, 10}</code></p>
+<pre><code>          1
+         / \
+        /   \
+       /     \
+      /       \
+     /         \
+    2           3
+   / \        /   \ 
+  4   5      6     7
+ / \ / \    / \  
+8  9 10 11 ... ... 
+
+</code></pre>
+<ul>
+<li><code>6</code> - Root of the tree of depth 10 (Contains the touched chunks)</li>
+<li><code>7</code> - Number of chunks</li>
+<li><code>8</code> - Version</li>
+<li><code>9</code> - CodeHash</li>
+<li><code>10</code> - Code length</li>
+<li><code>11</code> - Empty field</li>
+</ul>
+<p>Creates a new array of chunk indices (<code>chunkIndices</code>), with a capacity equal to 
+the double of the total touched chunks:</p>
+<p>for each of the touchedChunks, append the chunk index to the <code>chunkIndices</code>,
+the chunk index is <code>6144</code> + the &quot;index&quot; of the <code>touchedChunks</code> array. What is
+appended is <code>chunkIdx*2</code> and <code>chunkIdx*2+1</code>.</p>
+<p>Creates a <a href="./fastssz.html#provemulti">Multiproof</a> based on the array of
+<code>mdIndices</code> and <code>chunkIndices</code>.</p>
+<p>The multiproof is <a href="./fastssz.html#compress-multiproof">compressed</a> and
+<a href="./fastssz.html#compressedmultiproof">returned</a>.</p>
+<h4><a class="header" href="#newcontract" id="newcontract">NewContract</a></h4>
+<p>path: <code>codetrie/contract.go</code></p>
+<p><a href="codetrie.html#chunkify">Splits</a> the code into chunks of 32 bits</p>
+<p>Creates and returns a new <code>Contract</code> object containing the <code>code</code>, the <code>chunks</code> 
+and an empty map for <code>touchedChunks</code>.</p>
+<h4><a class="header" href="#touchpc-contract-method" id="touchpc-contract-method">TouchPC (Contract Method)</a></h4>
+<p>path: <code>codetrie/contract.go</code></p>
+<p>Calculates the corresponding chunks number for the <code>pc</code> (<code>chunk_number = pc / 32</code>).</p>
+<p>Adds the chunk as touched by creating an element in the <code>touchedChunks</code> map,
+where the key is the <code>chunk number</code> and the value is <code>true</code>.</p>
+<h4><a class="header" href="#touchrange-contract-method" id="touchrange-contract-method">TouchRange (Contract Method)</a></h4>
+<p>path: <code>codetrie/contract.go</code></p>
+<p>Calculate the chunks for the given range of opcodes and marks them as touched.</p>
+<h4><a class="header" href="#getssztree" id="getssztree">GetSSZTree</a></h4>
+<p>path: <code>codetrie/codetrie.go</code></p>
+<p>It <a href="codetrie.html#preparessz">gets</a> a new <a href="./schema.html#codetrie">CodeTrie</a>. Then calls the
+fastssz generated code to get a SSZ tree and this tree is returned.</p>
+<h4><a class="header" href="#preparessz" id="preparessz">prepareSSZ</a></h4>
+<p><a href="codetrie.html#chunkify">Chunkify</a>s the provided code, if the requested chunk size is
+different than 32, an error <code>MerkleizeSSZ only supports chunk size of 32</code>
+occurs.</p>
+<p>Calculates the First Instruction Offsets (FIO) for each one of the
+<a href="./schema.html#chunk">chunk</a></p>
+<p>Creates the <code>metadata</code>, which consists in version (<code>0</code>), the code hash and code
+length.</p>
+<p>Returns a new <a href="./schema.html#codetrie">CodeTrie</a> containing the <code>metadata</code>and
+chunks.</p>
+<h4><a class="header" href="#chunkify" id="chunkify">Chunkify</a></h4>
+<p>path: <code>codetrie/codetrie.go</code></p>
+<p>Calculates the total number of chunks are required for the given bytecode.</p>
+<p>Splits the code into 32 bits chunks and also finds the first instruction offset
+(<a href="codetrie.html#setfio">FIO</a>), this is to consider that the initical bytes might be part of a previous
+PUSH* input and to not consider those as opcodes.</p>
+<h1><a class="header" href="#fastssz" id="fastssz">FastSSZ</a></h1>
+<p><a href="https://github.com/ferranbt/fastssz">https://github.com/ferranbt/fastssz</a></p>
+<h2><a class="header" href="#fastssz-changes" id="fastssz-changes">FastSSZ Changes</a></h2>
+<p><a href="https://github.com/ferranbt/fastssz/pull/26">#26</a> - Added the possibility 
+to use a different hash function. Sina wanted to use <code>keccak256</code> as hash
+function.</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/28">#27</a> - Added <code>PutUint32</code>,
+<code>PutUint16</code>, and <code>PutUint8</code> to the hasher. Used to only have <code>PutUint64</code>.</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/28">#28</a> 
+- Created new schema, 
+- Added verification function for one of the structs,
+- Some hand-crafted test cases,
+- Pending to make <code>verify</code> more general so its not only for one struct.
+- New Files:
+- <code>tests/codetrie.go</code>: 
+- <code>tests/codetrie_encoding.go</code>: Automatically generated by fastssz
+- <code>tests/codetrie_test.go</code>: Verify proof tests</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/32">#32</a>
+- Added new <code>proof.go</code>; which included functions to verify proofs and verify
+multiproof as other helper functions.</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/33">#33</a>
+- Added support for multiproof generation</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/38">#38</a>
+- Adds a <code>--experimental</code> flag to get the tree-backing of an object
+- Given the tree-backing you can compute the root, generate and verify
+proofs.</p>
+<p><a href="https://github.com/ferranbt/fastssz/pull/39">#39</a> (pending PR)
+- Remove duplicate leafs from proof</p>
+<h2><a class="header" href="#provemulti" id="provemulti">ProveMulti</a></h2>
+<p>path: <code>tree.go</code></p>
+<ul>
+<li>Input: indices</li>
+<li>Output: <a href="fastssz.html#multiproof">Multiproof</a></li>
+</ul>
+<p>Get the required indices (<a href="fastssz.html#getrequiredindices"><code>getRequiredIndices</code></a>).</p>
+<p>Defines <code>proof</code> as a <code>Multiproof</code> object, declared with the provided indices,
+an empty Leaves array or arrays, an empty Hashes array of arrays.</p>
+<p>For each provided index, get the node based on the index. Adds the node as a <strong>Leave</strong>.</p>
+<p>For each <code>reqIndices</code>, get the node based on that index, Adds the node as
+a <strong>Hash</strong>.</p>
+<p>Returns the proof.</p>
+<pre><code class="language-golang">func (n *Node) ProveMulti(indices []int) (*Multiproof, error) {
+	reqIndices := getRequiredIndices(indices)
+	proof := &amp;Multiproof{Indices: indices, Leaves: make([][]byte, len(indices)), Hashes: make([][]byte, len(reqIndices))}
+
+	for i, gi := range indices {
+		node, err := n.Get(gi)
+		if err != nil {
+			return nil, err
+		}
+		proof.Leaves[i] = node.value
+	}
+
+	for i, gi := range reqIndices {
+		cur, err := n.Get(gi)
+		if err != nil {
+			return nil, err
+		}
+		proof.Hashes[i] = hashNode(cur)
+	}
+
+	return proof, nil
+}
+</code></pre>
+<h2><a class="header" href="#compress-multiproof" id="compress-multiproof">Compress (Multiproof)</a></h2>
+<ul>
+<li>(Multiproof) Compress: Returns a <code>*CompressedMultiproof</code></li>
+</ul>
+<p><code>tree.go</code></p>
+<pre><code class="language-golang">// Compress returns a new proof with zero hashes omitted.
+// See `CompressedMultiproof` for more info.
+func (p *Multiproof) Compress() *CompressedMultiproof {
+	compressed := &amp;CompressedMultiproof{
+		Indices:    p.Indices,
+		Leaves:     p.Leaves,
+		Hashes:     make([][]byte, 0, len(p.Hashes)),
+		ZeroLevels: make([]int, 0, len(p.Hashes)),
+	}
+
+	for _, h := range p.Hashes {
+		if l, ok := zeroHashLevels[string(h)]; ok {
+			compressed.ZeroLevels = append(compressed.ZeroLevels, l)
+			compressed.Hashes = append(compressed.Hashes, nil)
+		} else {
+			compressed.Hashes = append(compressed.Hashes, h)
+		}
+	}
+
+	return compressed
+}
+</code></pre>
+<h4><a class="header" href="#multiproof" id="multiproof">Multiproof:</a></h4>
+<pre><code class="language-golang">// Multiproof represents a merkle proof of several leaves.
+type Multiproof struct {
+	Indices []int
+	Leaves  [][]byte
+	Hashes  [][]byte
+}
+</code></pre>
+<h2><a class="header" href="#compressedmultiproof" id="compressedmultiproof">CompressedMultiproof:</a></h2>
+<pre><code class="language-golang">// CompressedMultiproof represents a compressed merkle proof of several leaves.
+// Compression is achieved by omitting zero hashes (and their hashes). `ZeroLevels`
+// contains information which helps the verifier fill in those hashes.
+type CompressedMultiproof struct {
+	Indices    []int
+	Leaves     [][]byte
+	Hashes     [][]byte
+	ZeroLevels []int // Stores the level for every omitted zero hash in the proof
+}
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
+        
+
+    </body>
+</html>
