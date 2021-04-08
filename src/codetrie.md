@@ -4,20 +4,6 @@ A new go module `codetrie` was added, this module contains functions that
 allows to create contract objects, and the corresponding trees for each
 contract.
 
-#### NewContractBag
-
-path: `codetrie/contract.go`.
-
-Returns a new empty [`ContractBag`](#contractbag-type) object.
-
-```go
-func NewContractBag() *ContractBag {
-	return &ContractBag{
-		contracts: make(map[common.Hash]*Contract),
-	}
-}
-```
-
 #### ContractBag (Type)
 
 path: `codetrie/contract.go`.
@@ -31,21 +17,32 @@ type ContractBag struct {
 }
 ```
 
-
 #### Contract (Type)
 
 path: `codetrie/contract.go`.
 
-A contract object contains a code, and a list of [Chunk](./schema.md#chunk)s
-corresponding to the code, it can also store which chunks were touched during
-the execution of the contract. When a chunk is touched, the value of the
+A contract object contains `code`, and a list of chunks that were touched
+during the execution of the contract. When a chunk is touched, the value of the
 element with key `index` will be set to `true`.
 
 ```go
 type Contract struct {
 	code          []byte
-	chunks        []*Chunk
 	touchedChunks map[int]bool
+}
+```
+
+#### CMStats (type)
+
+path: `codetrie/contract.go`
+
+```golang
+type CMStats struct {
+	NumContracts int
+	ProofSize    int
+	CodeSize     int
+	ProofStats   *ssz.ProofStats
+	RLPStats     *ssz.RLPStats
 }
 ```
 
@@ -65,33 +62,70 @@ type Chunk struct {
 }
 ```
 
-#### CMStats (type)
+#### RLPStats (type)
 
-path: `codetrie/contract.go`
-
-```golang
-type CMStats struct {
-	NumContracts  int
-	ProofSize     int
-	CodeSize      int
-	ProofStats    *ProofStats
-	TouchedChunks []int
+```go
+type RLPStats struct {
+	RLPSize    int
+	UnRLPSize  int
+	SnappySize int
 }
 ```
 
+#### NewContractBag
 
+path: `codetrie/contract.go`
+
+Returns a new empty [`ContractBag`](#contractbag-type) object.
+
+```go
+func NewContractBag() *ContractBag {
+	return &ContractBag{
+		contracts: make(map[common.Hash]*Contract),
+	}
+}
+```
 
 #### Stats (ContractBag Method)
 
 path: `codetrie/contract.go`
 
-For each contract in the contract bag, get the code size and its
-"[ProofStats](#proofstats-contract-method)" (RLPSize, Indices, ZeroLevels,
-Hashes, TouchedChunks). These results will be accumulated in the [code
-merkleization block stats](#cmstats-type).
+For each contract in the [ContractBag](#contractbag), gets the code size,
+[Prove](#prove-contract-method)s the contract, obtaining
+a [Multiproof](./fastssz.md#multiproof) and a [Compressed
+Multiproof](./fastssz.md#compressedmultiproof). 
 
-[code](./code.md#stats-contractbag-method)
+Stats for the [Multiproof](./fastssz.md#multiproof)s,
+[CompressedMultiproof](./fastssz.md#compressedmultiproof)s, and for the [RLP
+encoded](#newrlpstats) proof are collected in the main [Stats](#cmstats-type)
+object.
 
+```go
+func (b *ContractBag) Stats() (*CMStats, error) {
+	stats := NewCMStats()
+	stats.NumContracts = len(b.contracts)
+	for _, c := range b.contracts {
+		stats.CodeSize += c.CodeSize()
+		rawProof, err := c.Prove()
+		if err != nil {
+			return nil, err
+		}
+		p := ssz.NewMultiproof(rawProof)
+		cp := ssz.NewCompressedMultiproof(rawProof.Compress())
+
+		ps := cp.ProofStats()
+		stats.ProofStats.Add(ps)
+
+		rs, err := ssz.NewRLPStats(p, cp)
+		if err != nil {
+			return nil, err
+		}
+		stats.RLPStats.Add(rs)
+	}
+	stats.ProofSize = stats.ProofStats.Sum()
+	return stats, nil
+}
+```
 
 #### Get (ContractBag Method)
 
@@ -109,17 +143,7 @@ a [new contract](#newcontract) corresponding to the provided bytecode.
 
 path: `codetrie/contract.go`
 
-Loops through all contracts in the bag. Sums the length of each contract code
-size.
-
-Returns the result.
-
-#### ProofStats (Contract Method)
-
-[`Prove`](#prove-contract-method) the contract. Get the length of Indices,
-ZeroLevels, Hashes, TouchedChunks and Leaves in the resulting proof.
-
-> It also serializes the proof as RLP in order to know the serialized length.
+Returns the current contracts code size.
 
 #### Prove (Contract Method)
 
@@ -128,11 +152,23 @@ path: `codetrie/contract.go`
 [Creates a new SSZ tree](#getssztree) using the contracts code and specifying
 the chunk size of 32.
 
-Create new array of **metadata** indices (`mdIndices`), it is initialized with the indexes 7,
+Create new array of **metadata** indices, it is initialized with the indexes 7,
 8, 9,  and 10.
 
-`mdIndices := []int{7, 8, 9, 10}`
+    mdIndices := []int{7, 8, 9, 10}
+    => [7, 8, 9, 10]
 
+Another array is created containing the **touched chunks**, each one of this
+chunks obtains an index which will correspond to the place they belong in the
+tree.
+
+Creates a [Multiproof](./fastssz.md#provemulti) based on the array of
+metadata indices and chunk indices.
+
+The multiproof is [compressed](./fastssz.md#compress-multiproof) and
+[returned](./fastssz.md#compressedmultiproof).
+
+This Multiproof will have the following Tree structure:
 
 ```
           1
@@ -156,37 +192,22 @@ Create new array of **metadata** indices (`mdIndices`), it is initialized with t
 - `10` - Code length
 - `11` - Empty field
 
-Creates a new array of chunk indices (`chunkIndices`), with a capacity equal to 
-the double of the total touched chunks:
-
-for each of the touchedChunks, append the chunk index to the `chunkIndices`,
-the chunk index is `6144` + the "index" of the `touchedChunks` array. What is
-appended is `chunkIdx*2` and `chunkIdx*2+1`.
-
-Creates a [Multiproof](./fastssz.md#provemulti) based on the array of
-`mdIndices` and `chunkIndices`.
-
-The multiproof is [compressed](./fastssz.md#compress-multiproof) and
-[returned](./fastssz.md#compressedmultiproof).
-
 #### NewContract
 
 path: `codetrie/contract.go`
 
-[Splits](#chunkify) the code into chunks of 32 bits
-
-Creates and returns a new `Contract` object containing the `code`, the `chunks` 
-and an empty map for `touchedChunks`.
-
+Returns a [Contract](./codetrie.md#contract-type) object containing the `code`
+and an empty map of `touchedChunks`.
 
 #### TouchPC (Contract Method)
 
 path: `codetrie/contract.go`
 
-Calculates the corresponding chunks number for the `pc` (`chunk_number = pc / 32`).
+Calculates the corresponding chunk number for the `pc` (`chunk_number = pc / 32`).
 
-Adds the chunk as touched by creating an element in the `touchedChunks` map,
-where the key is the `chunk number` and the value is `true`.
+Adds the chunk as touched by creating an element (if not exists) in the
+`touchedChunks` map, where the key is the `chunk number` and the value is
+`true`.
 
 #### TouchRange (Contract Method)
 
@@ -199,16 +220,19 @@ Calculate the chunks for the given range of opcodes and marks them as touched.
 path: `codetrie/codetrie.go`
 
 It [gets](#preparessz) a new [CodeTrie](./schema.md#codetrie). Then calls the
-fastssz generated code to get a SSZ tree and this tree is returned.
+[fastssz](./fastssz) generated code to get the SSZ Tree which will get
+returned.
 
 #### prepareSSZ
+
+path: `codetrie/codetrie.go`
 
 [Chunkify](#chunkify)s the provided code, if the requested chunk size is
 different than 32, an error `MerkleizeSSZ only supports chunk size of 32`
 occurs.
 
 Calculates the First Instruction Offsets (FIO) for each one of the
-[chunk](./schema.md#chunk)
+[chunk](./schema.md#chunk)s
 
 Creates the `metadata`, which consists in version (`0`), the code hash and code
 length.
@@ -226,4 +250,27 @@ Splits the code into 32 bits chunks and also finds the first instruction offset
 ([FIO](#setfio)), this is to consider that the initical bytes might be part of a previous
 PUSH* input and to not consider those as opcodes.
 
+#### setFIO
+
+Loops the bytecode contained in the chunk's, when a `PUSH*` opcode is found, it
+will calculate if the input data for `PUSH*` is exceeding the current chunk, if
+that's the case it will calculate which offset is the Firs Instruction in the
+next chunk (avoid considering `PUSH*` data as instructions).
+
+
+#### NewRLPStats
+
+path: `codetrie/ssz/proof.go`
+
+Serializes the [CompressedMultiproof](./fastssz.md#compressedmultiproof) as RLP
+and gets the RLP size (`RLPSize`).
+
+Serializes the uncompressed [Multiproof](./fastssz.md#multiproof) as RLP and
+gets the RLP size (`UnRLPSize`).
+
+The uncompressed [Multiproof](./fastssz.md#multiproof)'s RLP is compresssed
+using [Snappy](https://github.com/golang/snappy) compression (`SnappySize`).
+
+The [RLPStats](#rlpstats-type) object is returned containing the previous
+fields `RLPSize`, `UnRLPSize`, and `SnappySize`.
 

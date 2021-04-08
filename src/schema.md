@@ -1,12 +1,14 @@
 # Schema
 
 The SSZ schema is defined as a series of [types](#types) needed to represent
-the Code trie. After defining these [types](#types) it is processed by
-[FastSSZ](#fastssz) in order to generate all the data needed to create the
+the Code trie. After defining these types,  the schema is processed by
+[FastSSZ](./fastssz.md) in order to generate all the data needed to create the
 tree, generate and verify proofs, this process generates Go source code in the
 [`types_encoding.go`](#geth-code) file.
 
 ## Types
+
+path: `codetrie/ssz/types.go`
 
 ### CodeTrie
 
