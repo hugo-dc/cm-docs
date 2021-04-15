@@ -163,20 +163,11 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#codetrie" id="codetrie">CodeTrie</a></h1>
+                        <h1 id="codetrie"><a class="header" href="#codetrie">CodeTrie</a></h1>
 <p>A new go module <code>codetrie</code> was added, this module contains functions that
 allows to create contract objects, and the corresponding trees for each
 contract.</p>
-<h4><a class="header" href="#newcontractbag" id="newcontractbag">NewContractBag</a></h4>
-<p>path: <code>codetrie/contract.go</code>.</p>
-<p>Returns a new empty <a href="#contractbag-type"><code>ContractBag</code></a> object.</p>
-<pre><code class="language-go">func NewContractBag() *ContractBag {
-	return &amp;ContractBag{
-		contracts: make(map[common.Hash]*Contract),
-	}
-}
-</code></pre>
-<h4><a class="header" href="#contractbag-type" id="contractbag-type">ContractBag (Type)</a></h4>
+<h4 id="contractbag-type"><a class="header" href="#contractbag-type">ContractBag (Type)</a></h4>
 <p>path: <code>codetrie/contract.go</code>.</p>
 <p>A <code>ContractBag</code> contains a <code>contracts</code> map where the key is a <code>Hash</code> (the
 contract code hash) and the value is a <a href="#contract"><code>Contract</code></a> object pointer.</p>
@@ -184,19 +175,27 @@ contract code hash) and the value is a <a href="#contract"><code>Contract</code>
 	contracts map[common.Hash]*Contract
 }
 </code></pre>
-<h4><a class="header" href="#contract-type" id="contract-type">Contract (Type)</a></h4>
+<h4 id="contract-type"><a class="header" href="#contract-type">Contract (Type)</a></h4>
 <p>path: <code>codetrie/contract.go</code>.</p>
-<p>A contract object contains a code, and a list of <a href="./schema.html#chunk">Chunk</a>s
-corresponding to the code, it can also store which chunks were touched during
-the execution of the contract. When a chunk is touched, the value of the
+<p>A contract object contains <code>code</code>, and a list of chunks that were touched
+during the execution of the contract. When a chunk is touched, the value of the
 element with key <code>index</code> will be set to <code>true</code>.</p>
 <pre><code class="language-go">type Contract struct {
 	code          []byte
-	chunks        []*Chunk
 	touchedChunks map[int]bool
 }
 </code></pre>
-<h4><a class="header" href="#chunk-type" id="chunk-type">Chunk (Type)</a></h4>
+<h4 id="cmstats-type"><a class="header" href="#cmstats-type">CMStats (type)</a></h4>
+<p>path: <code>codetrie/contract.go</code></p>
+<pre><code class="language-golang">type CMStats struct {
+	NumContracts int
+	ProofSize    int
+	CodeSize     int
+	ProofStats   *ssz.ProofStats
+	RLPStats     *ssz.RLPStats
+}
+</code></pre>
+<h4 id="chunk-type"><a class="header" href="#chunk-type">Chunk (Type)</a></h4>
 <p>path: <code>codetrie/codetrie.go</code>.</p>
 <p>A chunk object containes two fields: </p>
 <ul>
@@ -208,48 +207,84 @@ element with key <code>index</code> will be set to <code>true</code>.</p>
 	code []byte
 }
 </code></pre>
-<h4><a class="header" href="#cmstats-type" id="cmstats-type">CMStats (type)</a></h4>
-<p>path: <code>codetrie/contract.go</code></p>
-<pre><code class="language-golang">type CMStats struct {
-	NumContracts  int
-	ProofSize     int
-	CodeSize      int
-	ProofStats    *ProofStats
-	TouchedChunks []int
+<h4 id="rlpstats-type"><a class="header" href="#rlpstats-type">RLPStats (type)</a></h4>
+<pre><code class="language-go">type RLPStats struct {
+	RLPSize    int
+	UnRLPSize  int
+	SnappySize int
 }
 </code></pre>
-<h4><a class="header" href="#stats-contractbag-method" id="stats-contractbag-method">Stats (ContractBag Method)</a></h4>
+<h4 id="newcontractbag"><a class="header" href="#newcontractbag">NewContractBag</a></h4>
 <p>path: <code>codetrie/contract.go</code></p>
-<p>For each contract in the contract bag, get the code size and its
-&quot;<a href="#proofstats-contract-method">ProofStats</a>&quot; (RLPSize, Indices, ZeroLevels,
-Hashes, TouchedChunks). These results will be accumulated in the <a href="#cmstats-type">code
-merkleization block stats</a>.</p>
-<p><a href="./code.html#stats-contractbag-method">code</a></p>
-<h4><a class="header" href="#get-contractbag-method" id="get-contractbag-method">Get (ContractBag Method)</a></h4>
+<p>Returns a new empty <a href="#contractbag-type"><code>ContractBag</code></a> object.</p>
+<pre><code class="language-go">func NewContractBag() *ContractBag {
+	return &amp;ContractBag{
+		contracts: make(map[common.Hash]*Contract),
+	}
+}
+</code></pre>
+<h4 id="stats-contractbag-method"><a class="header" href="#stats-contractbag-method">Stats (ContractBag Method)</a></h4>
+<p>path: <code>codetrie/contract.go</code></p>
+<p>For each contract in the <a href="#contractbag">ContractBag</a>, gets the code size,
+<a href="#prove-contract-method">Prove</a>s the contract, obtaining
+a <a href="./fastssz.html#multiproof">Multiproof</a> and a <a href="./fastssz.html#compressedmultiproof">Compressed
+Multiproof</a>. </p>
+<p>Stats for the <a href="./fastssz.html#multiproof">Multiproof</a>s,
+<a href="./fastssz.html#compressedmultiproof">CompressedMultiproof</a>s, and for the <a href="#newrlpstats">RLP
+encoded</a> proof are collected in the main <a href="#cmstats-type">Stats</a>
+object.</p>
+<pre><code class="language-go">func (b *ContractBag) Stats() (*CMStats, error) {
+	stats := NewCMStats()
+	stats.NumContracts = len(b.contracts)
+	for _, c := range b.contracts {
+		stats.CodeSize += c.CodeSize()
+		rawProof, err := c.Prove()
+		if err != nil {
+			return nil, err
+		}
+		p := ssz.NewMultiproof(rawProof)
+		cp := ssz.NewCompressedMultiproof(rawProof.Compress())
+
+		ps := cp.ProofStats()
+		stats.ProofStats.Add(ps)
+
+		rs, err := ssz.NewRLPStats(p, cp)
+		if err != nil {
+			return nil, err
+		}
+		stats.RLPStats.Add(rs)
+	}
+	stats.ProofSize = stats.ProofStats.Sum()
+	return stats, nil
+}
+</code></pre>
+<h4 id="get-contractbag-method"><a class="header" href="#get-contractbag-method">Get (ContractBag Method)</a></h4>
 <p>path: <code>codetrie/contract.go</code></p>
 <p>Checks if contract is already in the contracts bag. To do that checks if the
 hash for the input code already exists in the <code>contracts</code> map. If it exists it
 will return the pointer to the <code>Contract</code> corresponding to that code hash.</p>
 <p>If the contract was not previously added to the contract bag it will create
 a <a href="#newcontract">new contract</a> corresponding to the provided bytecode.</p>
-<h4><a class="header" href="#codesize-contract-method" id="codesize-contract-method">CodeSize (Contract Method)</a></h4>
+<h4 id="codesize-contract-method"><a class="header" href="#codesize-contract-method">CodeSize (Contract Method)</a></h4>
 <p>path: <code>codetrie/contract.go</code></p>
-<p>Loops through all contracts in the bag. Sums the length of each contract code
-size.</p>
-<p>Returns the result.</p>
-<h4><a class="header" href="#proofstats-contract-method" id="proofstats-contract-method">ProofStats (Contract Method)</a></h4>
-<p><a href="#prove-contract-method"><code>Prove</code></a> the contract. Get the length of Indices,
-ZeroLevels, Hashes, TouchedChunks and Leaves in the resulting proof.</p>
-<blockquote>
-<p>It also serializes the proof as RLP in order to know the serialized length.</p>
-</blockquote>
-<h4><a class="header" href="#prove-contract-method" id="prove-contract-method">Prove (Contract Method)</a></h4>
+<p>Returns the current contracts code size.</p>
+<h4 id="prove-contract-method"><a class="header" href="#prove-contract-method">Prove (Contract Method)</a></h4>
 <p>path: <code>codetrie/contract.go</code></p>
 <p><a href="#getssztree">Creates a new SSZ tree</a> using the contracts code and specifying
 the chunk size of 32.</p>
-<p>Create new array of <strong>metadata</strong> indices (<code>mdIndices</code>), it is initialized with the indexes 7,
+<p>Create new array of <strong>metadata</strong> indices, it is initialized with the indexes 7,
 8, 9,  and 10.</p>
-<p><code>mdIndices := []int{7, 8, 9, 10}</code></p>
+<pre><code>mdIndices := []int{7, 8, 9, 10}
+=&gt; [7, 8, 9, 10]
+</code></pre>
+<p>Another array is created containing the <strong>touched chunks</strong>, each one of this
+chunks obtains an index which will correspond to the place they belong in the
+tree.</p>
+<p>Creates a <a href="./fastssz.html#provemulti">Multiproof</a> based on the array of
+metadata indices and chunk indices.</p>
+<p>The multiproof is <a href="./fastssz.html#compress-multiproof">compressed</a> and
+<a href="./fastssz.html#compressedmultiproof">returned</a>.</p>
+<p>This Multiproof will have the following Tree structure:</p>
 <pre><code>          1
          / \
         /   \
@@ -271,48 +306,56 @@ the chunk size of 32.</p>
 <li><code>10</code> - Code length</li>
 <li><code>11</code> - Empty field</li>
 </ul>
-<p>Creates a new array of chunk indices (<code>chunkIndices</code>), with a capacity equal to 
-the double of the total touched chunks:</p>
-<p>for each of the touchedChunks, append the chunk index to the <code>chunkIndices</code>,
-the chunk index is <code>6144</code> + the &quot;index&quot; of the <code>touchedChunks</code> array. What is
-appended is <code>chunkIdx*2</code> and <code>chunkIdx*2+1</code>.</p>
-<p>Creates a <a href="./fastssz.html#provemulti">Multiproof</a> based on the array of
-<code>mdIndices</code> and <code>chunkIndices</code>.</p>
-<p>The multiproof is <a href="./fastssz.html#compress-multiproof">compressed</a> and
-<a href="./fastssz.html#compressedmultiproof">returned</a>.</p>
-<h4><a class="header" href="#newcontract" id="newcontract">NewContract</a></h4>
+<h4 id="newcontract"><a class="header" href="#newcontract">NewContract</a></h4>
 <p>path: <code>codetrie/contract.go</code></p>
-<p><a href="#chunkify">Splits</a> the code into chunks of 32 bits</p>
-<p>Creates and returns a new <code>Contract</code> object containing the <code>code</code>, the <code>chunks</code> 
-and an empty map for <code>touchedChunks</code>.</p>
-<h4><a class="header" href="#touchpc-contract-method" id="touchpc-contract-method">TouchPC (Contract Method)</a></h4>
+<p>Returns a <a href="./codetrie.html#contract-type">Contract</a> object containing the <code>code</code>
+and an empty map of <code>touchedChunks</code>.</p>
+<h4 id="touchpc-contract-method"><a class="header" href="#touchpc-contract-method">TouchPC (Contract Method)</a></h4>
 <p>path: <code>codetrie/contract.go</code></p>
-<p>Calculates the corresponding chunks number for the <code>pc</code> (<code>chunk_number = pc / 32</code>).</p>
-<p>Adds the chunk as touched by creating an element in the <code>touchedChunks</code> map,
-where the key is the <code>chunk number</code> and the value is <code>true</code>.</p>
-<h4><a class="header" href="#touchrange-contract-method" id="touchrange-contract-method">TouchRange (Contract Method)</a></h4>
+<p>Calculates the corresponding chunk number for the <code>pc</code> (<code>chunk_number = pc / 32</code>).</p>
+<p>Adds the chunk as touched by creating an element (if not exists) in the
+<code>touchedChunks</code> map, where the key is the <code>chunk number</code> and the value is
+<code>true</code>.</p>
+<h4 id="touchrange-contract-method"><a class="header" href="#touchrange-contract-method">TouchRange (Contract Method)</a></h4>
 <p>path: <code>codetrie/contract.go</code></p>
 <p>Calculate the chunks for the given range of opcodes and marks them as touched.</p>
-<h4><a class="header" href="#getssztree" id="getssztree">GetSSZTree</a></h4>
+<h4 id="getssztree"><a class="header" href="#getssztree">GetSSZTree</a></h4>
 <p>path: <code>codetrie/codetrie.go</code></p>
 <p>It <a href="#preparessz">gets</a> a new <a href="./schema.html#codetrie">CodeTrie</a>. Then calls the
-fastssz generated code to get a SSZ tree and this tree is returned.</p>
-<h4><a class="header" href="#preparessz" id="preparessz">prepareSSZ</a></h4>
+<a href="./fastssz">fastssz</a> generated code to get the SSZ Tree which will get
+returned.</p>
+<h4 id="preparessz"><a class="header" href="#preparessz">prepareSSZ</a></h4>
+<p>path: <code>codetrie/codetrie.go</code></p>
 <p><a href="#chunkify">Chunkify</a>s the provided code, if the requested chunk size is
 different than 32, an error <code>MerkleizeSSZ only supports chunk size of 32</code>
 occurs.</p>
 <p>Calculates the First Instruction Offsets (FIO) for each one of the
-<a href="./schema.html#chunk">chunk</a></p>
+<a href="./schema.html#chunk">chunk</a>s</p>
 <p>Creates the <code>metadata</code>, which consists in version (<code>0</code>), the code hash and code
 length.</p>
 <p>Returns a new <a href="./schema.html#codetrie">CodeTrie</a> containing the <code>metadata</code>and
 chunks.</p>
-<h4><a class="header" href="#chunkify" id="chunkify">Chunkify</a></h4>
+<h4 id="chunkify"><a class="header" href="#chunkify">Chunkify</a></h4>
 <p>path: <code>codetrie/codetrie.go</code></p>
 <p>Calculates the total number of chunks are required for the given bytecode.</p>
 <p>Splits the code into 32 bits chunks and also finds the first instruction offset
 (<a href="#setfio">FIO</a>), this is to consider that the initical bytes might be part of a previous
 PUSH* input and to not consider those as opcodes.</p>
+<h4 id="setfio"><a class="header" href="#setfio">setFIO</a></h4>
+<p>Loops the bytecode contained in the chunk's, when a <code>PUSH*</code> opcode is found, it
+will calculate if the input data for <code>PUSH*</code> is exceeding the current chunk, if
+that's the case it will calculate which offset is the Firs Instruction in the
+next chunk (avoid considering <code>PUSH*</code> data as instructions).</p>
+<h4 id="newrlpstats"><a class="header" href="#newrlpstats">NewRLPStats</a></h4>
+<p>path: <code>codetrie/ssz/proof.go</code></p>
+<p>Serializes the <a href="./fastssz.html#compressedmultiproof">CompressedMultiproof</a> as RLP
+and gets the RLP size (<code>RLPSize</code>).</p>
+<p>Serializes the uncompressed <a href="./fastssz.html#multiproof">Multiproof</a> as RLP and
+gets the RLP size (<code>UnRLPSize</code>).</p>
+<p>The uncompressed <a href="./fastssz.html#multiproof">Multiproof</a>'s RLP is compresssed
+using <a href="https://github.com/golang/snappy">Snappy</a> compression (<code>SnappySize</code>).</p>
+<p>The <a href="#rlpstats-type">RLPStats</a> object is returned containing the previous
+fields <code>RLPSize</code>, <code>UnRLPSize</code>, and <code>SnappySize</code>.</p>
 
                     </main>
 

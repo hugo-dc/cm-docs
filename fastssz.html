@@ -163,9 +163,9 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#fastssz" id="fastssz">FastSSZ</a></h1>
+                        <h1 id="fastssz"><a class="header" href="#fastssz">FastSSZ</a></h1>
 <p><a href="https://github.com/ferranbt/fastssz">https://github.com/ferranbt/fastssz</a></p>
-<h2><a class="header" href="#fastssz-changes" id="fastssz-changes">FastSSZ Changes</a></h2>
+<h2 id="fastssz-changes"><a class="header" href="#fastssz-changes">FastSSZ Changes</a></h2>
 <p><a href="https://github.com/ferranbt/fastssz/pull/26">#26</a> - Added the possibility 
 to use a different hash function. Sina wanted to use <code>keccak256</code> as hash
 function.</p>
@@ -191,7 +191,7 @@ multiproof as other helper functions.</p>
 proofs.</p>
 <p><a href="https://github.com/ferranbt/fastssz/pull/39">#39</a> (pending PR)
 - Remove duplicate leafs from proof</p>
-<h2><a class="header" href="#provemulti" id="provemulti">ProveMulti</a></h2>
+<h2 id="provemulti"><a class="header" href="#provemulti">ProveMulti</a></h2>
 <p>path: <code>tree.go</code></p>
 <ul>
 <li>Input: indices</li>
@@ -227,7 +227,7 @@ a <strong>Hash</strong>.</p>
 	return proof, nil
 }
 </code></pre>
-<h2><a class="header" href="#compress-multiproof" id="compress-multiproof">Compress (Multiproof)</a></h2>
+<h2 id="compress-multiproof"><a class="header" href="#compress-multiproof">Compress (Multiproof)</a></h2>
 <ul>
 <li>(Multiproof) Compress: Returns a <code>*CompressedMultiproof</code></li>
 </ul>
@@ -254,7 +254,7 @@ func (p *Multiproof) Compress() *CompressedMultiproof {
 	return compressed
 }
 </code></pre>
-<h4><a class="header" href="#multiproof" id="multiproof">Multiproof:</a></h4>
+<h4 id="multiproof"><a class="header" href="#multiproof">Multiproof:</a></h4>
 <pre><code class="language-golang">// Multiproof represents a merkle proof of several leaves.
 type Multiproof struct {
 	Indices []int
@@ -262,7 +262,7 @@ type Multiproof struct {
 	Hashes  [][]byte
 }
 </code></pre>
-<h2><a class="header" href="#compressedmultiproof" id="compressedmultiproof">CompressedMultiproof:</a></h2>
+<h2 id="compressedmultiproof"><a class="header" href="#compressedmultiproof">CompressedMultiproof:</a></h2>
 <pre><code class="language-golang">// CompressedMultiproof represents a compressed merkle proof of several leaves.
 // Compression is achieved by omitting zero hashes (and their hashes). `ZeroLevels`
 // contains information which helps the verifier fill in those hashes.

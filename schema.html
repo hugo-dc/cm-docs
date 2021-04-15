@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Code Merkleization</title>
+        <title>Schema - Code Merkleization</title>
         
         
 
@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="geth.html"><strong aria-hidden="true">2.</strong> Geth changes</a></li><li class="chapter-item expanded "><a href="schema.html"><strong aria-hidden="true">3.</strong> Schema</a></li><li class="chapter-item expanded "><a href="codetrie.html"><strong aria-hidden="true">4.</strong> CodeTrie</a></li><li class="chapter-item expanded "><a href="fastssz.html"><strong aria-hidden="true">5.</strong> FastSSZ</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="geth.html"><strong aria-hidden="true">2.</strong> Geth changes</a></li><li class="chapter-item expanded "><a href="schema.html" class="active"><strong aria-hidden="true">3.</strong> Schema</a></li><li class="chapter-item expanded "><a href="codetrie.html"><strong aria-hidden="true">4.</strong> CodeTrie</a></li><li class="chapter-item expanded "><a href="fastssz.html"><strong aria-hidden="true">5.</strong> FastSSZ</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -163,25 +163,59 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
-<p>This document describes experiments in Geth using chunk based merkleization
-according to <a href="https://eips.ethereum.org/EIPS/eip-2926">EIP 2926</a>, analyzing the
-Merkleization of contracts touched in blocks execution during a full sync.</p>
-<p>We are using SSZ Merkleization which was implemented in the
-<a href="./fastssz.html">fastssz</a> library and included: </p>
-<ul>
-<li>New structures/scheme were defined in order to represent a binary tree.</li>
-<li>Proof Generation Proof verification</li>
-</ul>
+                        <h1 id="schema"><a class="header" href="#schema">Schema</a></h1>
+<p>The SSZ schema is defined as a series of <a href="#types">types</a> needed to represent
+the Code trie. After defining these types,  the schema is processed by
+<a href="./fastssz.html">FastSSZ</a> in order to generate all the data needed to create the
+tree, generate and verify proofs, this process generates Go source code in the
+<a href="#geth-code"><code>types_encoding.go</code></a> file.</p>
+<h2 id="types"><a class="header" href="#types">Types</a></h2>
+<p>path: <code>codetrie/ssz/types.go</code></p>
+<h3 id="codetrie"><a class="header" href="#codetrie">CodeTrie</a></h3>
+<p><code>CodeTrie</code> is the type created to represent the code tree:</p>
+<pre><code class="language-go">type CodeTrie struct {
+	Metadata *Metadata
+	Chunks   []*Chunk `ssz-max:&quot;1024&quot;`
+}
+</code></pre>
+<p>The code trie consists in some <a href="#metadata"><code>Metadata</code></a> and the code
+<a href="#chunk"><code>Chunk</code></a>s.</p>
+<h3 id="metadata"><a class="header" href="#metadata">Metadata</a></h3>
+<p>The metadata will store the <code>Version</code>, <code>CodeHash</code> and total <code>CodeLength</code>,
+according to the <a href="https://eips.ethereum.org/EIPS/eip-2926#metadata-fields">EIP</a></p>
+<pre><code class="language-golang">type Metadata struct {
+	Version    uint8
+	CodeHash   Hash `ssz-size:&quot;32&quot;`
+	CodeLength uint16
+}
+</code></pre>
+<h3 id="hash"><a class="header" href="#hash">Hash</a></h3>
+<p>The Hash used in the Matadata's <code>CodeHash</code> is defined as a byte array.</p>
+<pre><code class="language-golang">type Hash []byte
+</code></pre>
+<h3 id="chunk"><a class="header" href="#chunk">Chunk</a></h3>
+<p>Each Chunk contains a FIO, which corresponds to the First Instruction Offset
+(i.e. not part of a <code>PUSH*</code> opcode's input).</p>
+<p>The Chunk type also contains an array of byte code up to 32 bytes each.</p>
+<pre><code class="language-golang">type Chunk struct {
+	FIO  uint8
+	Code []byte `ssz-size:&quot;32&quot;` // Last chunk is right-padded with zeros
+}
+
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
+                            <a rel="prev" href="geth.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
 
                         
-                            <a rel="next" href="geth.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="codetrie.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -193,9 +227,13 @@ Merkleization of contracts touched in blocks execution during a full sync.</p>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
+                    <a rel="prev" href="geth.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
 
                 
-                    <a rel="next" href="geth.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="codetrie.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

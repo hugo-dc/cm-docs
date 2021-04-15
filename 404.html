@@ -3,8 +3,10 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Schema - Code Merkleization</title>
+        <title></title>
         
+        
+        <base href="/">
         
 
 
@@ -95,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="geth.html"><strong aria-hidden="true">2.</strong> Geth changes</a></li><li class="chapter-item expanded "><a href="schema.html" class="active"><strong aria-hidden="true">3.</strong> Schema</a></li><li class="chapter-item expanded "><a href="codetrie.html"><strong aria-hidden="true">4.</strong> CodeTrie</a></li><li class="chapter-item expanded "><a href="fastssz.html"><strong aria-hidden="true">5.</strong> FastSSZ</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="geth.html"><strong aria-hidden="true">2.</strong> Geth changes</a></li><li class="chapter-item expanded "><a href="schema.html"><strong aria-hidden="true">3.</strong> Schema</a></li><li class="chapter-item expanded "><a href="codetrie.html"><strong aria-hidden="true">4.</strong> CodeTrie</a></li><li class="chapter-item expanded "><a href="fastssz.html"><strong aria-hidden="true">5.</strong> FastSSZ</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -163,60 +165,15 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#schema" id="schema">Schema</a></h1>
-<p>The SSZ schema is defined as a series of <a href="#types">types</a> needed to represent
-the Code trie. After defining these <a href="#types">types</a> it is processed by
-<a href="#fastssz">FastSSZ</a> in order to generate all the data needed to create the
-tree, generate and verify proofs, this process generates Go source code in the
-<a href="#geth-code"><code>types_encoding.go</code></a> file.</p>
-<h2><a class="header" href="#types" id="types">Types</a></h2>
-<h3><a class="header" href="#codetrie" id="codetrie">CodeTrie</a></h3>
-<p><code>CodeTrie</code> is the type created to represent the code tree:</p>
-<pre><code class="language-go">type CodeTrie struct {
-	Metadata *Metadata
-	Chunks   []*Chunk `ssz-max:&quot;1024&quot;`
-}
-</code></pre>
-<p>The code trie consists in some <a href="#metadata"><code>Metadata</code></a> and the code
-<a href="#chunk"><code>Chunk</code></a>s.</p>
-<h3><a class="header" href="#metadata" id="metadata">Metadata</a></h3>
-<p>The metadata will store the <code>Version</code>, <code>CodeHash</code> and total <code>CodeLength</code>,
-according to the <a href="https://eips.ethereum.org/EIPS/eip-2926#metadata-fields">EIP</a></p>
-<pre><code class="language-golang">type Metadata struct {
-	Version    uint8
-	CodeHash   Hash `ssz-size:&quot;32&quot;`
-	CodeLength uint16
-}
-</code></pre>
-<h3><a class="header" href="#hash" id="hash">Hash</a></h3>
-<p>The Hash used in the Matadata's <code>CodeHash</code> is defined as a byte array.</p>
-<pre><code class="language-golang">type Hash []byte
-</code></pre>
-<h3><a class="header" href="#chunk" id="chunk">Chunk</a></h3>
-<p>Each Chunk contains a FIO, which corresponds to the First Instruction Offset
-(i.e. not part of a <code>PUSH*</code> opcode's input).</p>
-<p>The Chunk type also contains an array of byte code up to 32 bytes each.</p>
-<pre><code class="language-golang">type Chunk struct {
-	FIO  uint8
-	Code []byte `ssz-size:&quot;32&quot;` // Last chunk is right-padded with zeros
-}
-
-</code></pre>
+                        <h1 id="document-not-found-404"><a class="header" href="#document-not-found-404">Document not found (404)</a></h1>
+<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="geth.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <i class="fa fa-angle-left"></i>
-                            </a>
-                        
 
-                        
-                            <a rel="next" href="codetrie.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -226,15 +183,7 @@ according to the <a href="https://eips.ethereum.org/EIPS/eip-2926#metadata-field
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="geth.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <i class="fa fa-angle-left"></i>
-                    </a>
-                
 
-                
-                    <a rel="next" href="codetrie.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
-                    </a>
                 
             </nav>
 

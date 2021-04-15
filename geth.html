@@ -3,10 +3,8 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title></title>
+        <title>Geth changes - Code Merkleization</title>
         
-        
-        <base href="/">
         
 
 
@@ -97,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="geth.html"><strong aria-hidden="true">2.</strong> Geth changes</a></li><li class="chapter-item expanded "><a href="schema.html"><strong aria-hidden="true">3.</strong> Schema</a></li><li class="chapter-item expanded "><a href="codetrie.html"><strong aria-hidden="true">4.</strong> CodeTrie</a></li><li class="chapter-item expanded "><a href="fastssz.html"><strong aria-hidden="true">5.</strong> FastSSZ</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="geth.html" class="active"><strong aria-hidden="true">2.</strong> Geth changes</a></li><li class="chapter-item expanded "><a href="schema.html"><strong aria-hidden="true">3.</strong> Schema</a></li><li class="chapter-item expanded "><a href="codetrie.html"><strong aria-hidden="true">4.</strong> CodeTrie</a></li><li class="chapter-item expanded "><a href="fastssz.html"><strong aria-hidden="true">5.</strong> FastSSZ</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -165,15 +163,130 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#document-not-found-404" id="document-not-found-404">Document not found (404)</a></h1>
-<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
+                        <h1 id="geth-changes"><a class="header" href="#geth-changes">Geth changes</a></h1>
+<p>A Geth fork was created and added some features to merkleize contracts when
+performing a full sync.</p>
+<p>Changes are described below.</p>
+<h2 id="new-modules"><a class="header" href="#new-modules">New modules</a></h2>
+<p>Two new modules are introduced to the Geth code base:</p>
+<ul>
+<li><code>ssz</code> (<code>codetrie/ssz</code>): contains the <a href="./schema.html">schema</a> defined for the code tree.</li>
+<li><code>codetrie</code>: contains the <a href="./codetrie.html">logic</a> needed to manipulate the tree.</li>
+</ul>
+<h2 id="codemerkleization-flag"><a class="header" href="#codemerkleization-flag">codemerkleization flag</a></h2>
+<p>changes: </p>
+<ul>
+<li><code>cmd/geth/chaincmd.go</code></li>
+<li><code>cmd/geth/usage.go</code></li>
+<li><code>cmd/geth/main.go</code></li>
+<li><code>cmd/utils/flags.go</code></li>
+<li><code>eth/gen_config.go</code></li>
+<li><code>eth/backend.go</code></li>
+<li><code>eth/config.go</code></li>
+</ul>
+<p>A new flag was added in order to indicate geth we want to analyze how the
+contracts in a block would be merkleized and get the size of proofs required
+for the contracts in each block.</p>
+<h2 id="state_processor"><a class="header" href="#state_processor">state_processor</a></h2>
+<p>path: <code>core/state_processor.go</code></p>
+<p>One of the main <a href="#changed-code">changes</a> in Geth is in the <code>state_processor</code>.
+In function <code>Process</code> a <a href="./codetrie.html#newcontractbag">new &quot;Contract Bag&quot;</a> is
+created. A <code>ContractBag</code> is a map where the key is the <strong>code hash</strong> and the
+value is the <strong>contract code</strong>, this avoids duplicating identical contracts
+with the same bytecode. </p>
+<p>Then, each transaction in the block is applied. When the <a href="#run-evm-interpreter">EVM
+Interpreter</a> is <em>executing</em> the opcodes, collects
+information about touched opcodes and which chunks the opcodes belong.</p>
+<p>After contracts bytecode and touched opcodes/chunks are collected, the stats
+are calculated by calling the
+<a href="./codetrie.html#stats-contractbag-method"><code>bag.Stats()</code></a> method, this method
+merkleizes the contract, and generates the proof needed for that contract in
+that specific block. The proof consists in indices, hashes, zero levels and
+leaves. And the sum of those values for all the contracts is considered as
+a metric of &quot;proof size&quot; of the block. Indices, Hashes, and Zero Levels are
+serialized as RLP and the RLP size is used as another measure of the proof
+size.</p>
+<p>The results are stored in a <code>csv</code> (<code>cm-result.csv</code>) file with the following
+fields:</p>
+<ul>
+<li><strong>Block number</strong></li>
+<li><strong>Code size</strong>: The sum of all contract's bytecode size in the block.</li>
+<li><strong>Proof size</strong>: The sum of all indices, zero levels, hashes, and leaves.</li>
+<li><strong>RLP Size</strong>: Size of the RLP-encoded <a href="./fastssz#compressedmultiproof">Compressed Multiproof</a> (indices, zero levels, hashes and leaves.)</li>
+<li><strong>UnRLPSize</strong>: Size of the uncompressed-RLP Encoded
+<a href="./fastssz#multiproof">Proof</a> (Indices, Leaves, Hashes) </li>
+<li><strong>SnappySize</strong>: Size of the Indices, Zero Levels, Hashes, and Leaves, serialized as RLP and then compressed using Snappy compression.</li>
+<li><strong>Total indices</strong></li>
+<li><strong>Total zero levels</strong></li>
+<li><strong>Total hashes</strong></li>
+<li><strong>Total Leaves</strong></li>
+</ul>
+<h2 id="run-evm-interpreter"><a class="header" href="#run-evm-interpreter">Run (EVM Interpreter)</a></h2>
+<p>path: <code>core/vm/interpreter.go</code></p>
+<p>When evaluating the contract code in the <code>Run</code> function, checks if the
+<code>-codemerkleization</code> flag is set, and <code>ContractBag</code> was initialized correctly,
+also avoids merkleizing code which does not corresponds to a contract (i.e.
+contract creation code).</p>
+<p><a href="./codetrie.html#get-contractbag-method">Retrieve</a> the <code>Contract</code> from the
+contract bag, otherwise, if the contract does not exist in the contract bag
+yet, a new <code>Contract</code> object is created.</p>
+<p><a href="./codetrie.html#touchpc-contract-method">Marks the chunk</a> corresponding to the current opcode at the current Program Counter (pc) as &quot;touched&quot;.</p>
+<p>If the current opcode is <code>CODECOPY</code> it will also <a href="./codetrie.html#touchrange-contract-method">touch the
+range</a> of opcodes being copied.</p>
+<p>When the current opcode is <code>EXTCODECOPY</code>, it will also retrieve the
+code for the &quot;external&quot; contract code we want to copy 
+and that code will be <a href="./codetrie.html#touchrange-contract-method">marked as touched</a>.</p>
+<p>In the case if init code (contract creation code) it checks if the total length
+of the code size is greater than <code>0xc000</code> (49152), if it is greater it will be
+<a href="./codetrie.html#addlargeinit-contractbag-method">Added</a> to a map in
+<code>ContractBag</code>, where the key is the <code>codeHash</code> of the contract and the value is
+its total code size. </p>
+<h2 id="added-code"><a class="header" href="#added-code">Added code</a></h2>
+<p>This is the directory tree for the new code added to Geth</p>
+<pre><code>├── codetrie
+│   ├── ssz
+│   │   ├── types_encoding.go
+│   │   └── types.go
+│   ├── bin_hex_test.go
+│   ├── codetrie.go
+│   ├── codetrie_test.go
+│   ├── contract.go
+│   ├── op.go
+│   ├── ssz_test.go
+│   └── transition.go
+</code></pre>
+<h2 id="changed-code"><a class="header" href="#changed-code">Changed code</a></h2>
+<pre><code>├── cmd
+│   ├── geth
+│   │   ├── chaincmd.go
+│   │   ├── main.go
+│   │   └── usage.go
+│   └── utils
+│       ├── flags.go
+├── core
+│   ├── ...
+│   ├── state_processor.go
+│   ├── ...
+├── eth
+│   ├── backend.go
+│   ├── config.go
+│   ├── gen_config.go
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
+                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
 
+                        
+                            <a rel="next" href="schema.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -183,7 +296,15 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
+                    <a rel="prev" href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
 
+                
+                    <a rel="next" href="schema.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 

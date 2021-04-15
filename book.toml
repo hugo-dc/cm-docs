@@ -1,6 +1,0 @@
-[book]
-authors = ["Jose Hugo De la cruz Romero"]
-language = "en"
-multilingual = false
-src = "src"
-title = "Code Merkleization"
